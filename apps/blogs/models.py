@@ -61,6 +61,8 @@ class Post(models.Model):
     slug = models.SlugField(unique=True)
     content = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICE, default=DRAFT)
+    comment_count = models.PositiveIntegerField(default=0)
+    reaction_count = models.PositiveIntegerField(default=0)
     is_deleted = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -79,6 +81,7 @@ class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()
     reply_count = models.PositiveIntegerField(default=0)
+    reaction_count = models.PositiveIntegerField(default=0)
     parent = models.ForeignKey(
         "self",
         null=True,
@@ -97,3 +100,20 @@ class Comment(models.Model):
 
     def is_reply(self):
         return self.parent is not None
+
+class Reaction(models.Model):
+    REACTION_TYPE_CHOICE = [
+        ('upvote', "Upvote"),
+        ('downvote', "Downvote"),
+    ]
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='reactions')
+    user = models.Foreignkey(User, on_delete=models.CASCADE, related_name='reactions')
+    reaction_type= models.CharField(max_length=10, default='upvote')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"Reaction by {self.user} on {self.post}"

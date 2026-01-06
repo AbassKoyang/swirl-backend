@@ -39,10 +39,9 @@ class CommentSerializer(serializers.ModelSerializer):
     parent_id = serializers.PrimaryKeyRelatedField(
         queryset=Comment.objects.all(),
         source="parent",
-        write_only=True,
         required=False
     )
     class Meta:
         model = Comment
-        fields = ['id', 'post', 'user', 'content', 'parent_id' 'created_at', 'updated_at']
+        fields = ['id', 'post', 'user', 'content', 'parent_id', 'created_at', 'updated_at']
         read_only_fields = ['post', 'user', 'created_at', 'updated_at']
