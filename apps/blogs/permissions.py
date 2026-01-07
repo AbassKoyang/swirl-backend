@@ -7,3 +7,7 @@ class IsOwner(BasePermission):
 class IsCommentOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user
+        
+class IsBookmarkOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user

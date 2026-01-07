@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.core.serializers import UserSummarySerializer
-from .models import Category, Comment, Post
+from .models import Category, Comment, Post, Reaction, Bookmark
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,3 +45,20 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'post', 'user', 'content', 'parent_id', 'created_at', 'updated_at']
         read_only_fields = ['post', 'user', 'created_at', 'updated_at']
+
+class ReactionSerializer(serializers.ModelSerializer):
+    user = UserSummarySerializer(read_only=True)
+
+    class Meta:
+        model = Reaction
+        fields = ['id', 'user', 'reaction_type', 'created_at']
+        read_only_fields = ['user', 'created_at']
+
+class BookmarkSerializer(serializers.ModelSerializer):
+    user = UserSummarySerializer(read_only=True)
+    post = PostSummarySerializer(read_only=True)
+
+    class Meta:
+        model = Bookmark
+        fields = ['id', 'user', 'post', 'created_at']
+        read_only_fields = ['user', 'post', 'created_at']

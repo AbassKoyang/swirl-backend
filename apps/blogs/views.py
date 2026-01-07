@@ -1,12 +1,13 @@
 
 from django.db.models import F
 from rest_framework import generics, filters, permissions
+from django.contrib.contenttypes.models import ContentType
 
-from .permissions import IsCommentOwner, IsOwner
+from .permissions import IsCommentOwner, IsOwner, IsBookmarkOwner
 
-from .serializers import CommentSerializer, PostSerializer, CategorySerializer
+from .serializers import CommentSerializer, PostSerializer, CategorySerializer, ReactionSerializer, BookmarkSerializer
 
-from .models import Post, Category, Comment
+from .models import Post, Category, Comment, Reaction, Bookmark
 # Create your views here
 
 class PostsListCreateView(generics.ListCreateAPIView):
@@ -84,6 +85,9 @@ class CommentsListCreateView(generics.ListCreateAPIView):
         post_id = self.kwargs["id"]
         post = generics.get_object_or_404(Post, pk=post_id)
         serializer.save(post=post, user=self.request.user)
+        Post.objects.filter(pk=post_id).update(
+            comment_count=F("comment_count") + 1
+        )
 
 class RetrieveCommentView(generics.RetrieveAPIView):
     queryset = Comment.objects.all()
@@ -95,25 +99,24 @@ class RetrieveCommentView(generics.RetrieveAPIView):
 class UpdateCommentView(generics.UpdateAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsCommentOwner]
+    permission_classes = [permissions.IsAuthenticated, IsCommentOwner]
     lookup_field = 'pk'
     lookup_url_kwarg = 'id'
 
 class DeleteCommentView(generics.DestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsCommentOwner]
+    permission_classes = [permissions.IsAuthenticated, IsCommentOwner]
     lookup_field = 'pk'
     lookup_url_kwarg = 'id'
 
     def perform_destroy(self, instance):
         parent = instance.parent
-        instance.delete()
-
         if parent:
             Comment.objects.filter(pk=parent.pk).update(
                 reply_count=F("reply_count") - 1
-            )
+        )
+        instance.delete()
 
 class RepliesListCreateView(generics.ListCreateAPIView):
     queryset = Comment.objects.all()
@@ -136,11 +139,147 @@ class RepliesListCreateView(generics.ListCreateAPIView):
             reply_count=F("reply_count") + 1
         )
 
-
+class PostReactionListCreateView(generics.ListCreateAPIView):
+    serializer_class = ReactionSerializer
+    permission_classes = [permissions.AllowAny]
     
+    def get_queryset(self):
+        reaction_type = self.request.query_params
+        post_id = self.kwargs['id']
+        post = generics.get_object_or_404(Post, pk=post_id)
+        if reaction_type == 'upvote':
+            return Reaction.objects.filter(object_id=post.id, reaction_type=reaction_type).select_related('user')
+        elif reaction_type == 'downvote':
+            return Reaction.objects.filter(object_id=post.id, reaction_type=reaction_type).select_related('user')
+        
+        return Reaction.objects.filter(object_id=post.id).select_related('user')
+    
+    def perform_create(self, serializer):
+        post_id = self.kwargs['id']
+        post = generics.get_object_or_404(Post, pk=post_id)
+        post_type = ContentType.objects.get_for_model(Post)
+        reaction_type = serializer.validated_data['reaction_type']
+        reaction = Reaction.objects.filter(
+            user=self.request.user,
+            content_type=post_type,
+            object_id=post.id
+        ).first()
+
+        if reaction and reaction.reaction_type == reaction_type:
+            Post.objects.filter(
+                pk=post_id,
+                reaction_count__gt=0
+            ).update(
+                reaction_count=F("reaction_count") - 1
+            )
+            reaction.delete()
+        elif reaction and reaction.reaction_type != reaction_type:
+            reaction.reaction_type = reaction_type
+            reaction.save(update_fields=["reaction_type"])
+        else:
+            serializer.save(
+                user=self.request.user,
+                content_type=post_type,
+                object_id=post.id
+            )
+            Post.objects.filter(pk=post_id).update(
+                reaction_count=F("reaction_count") + 1
+            )
+
+class CommentReactionListCreateView(generics.ListCreateAPIView):
+    serializer_class = ReactionSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        reaction_type = self.request.query_params
+        comment_id = self.kwargs['id']
+        comment = generics.get_object_or_404(Comment, pk=comment_id)
+        if reaction_type == 'upvote':
+            return Reaction.objects.filter(object_id=comment.id, reaction_type=reaction_type).select_related('user')
+        elif reaction_type == 'downvote':
+            return Reaction.objects.filter(object_id=comment.id, reaction_type=reaction_type).select_related('user')
+        
+        return Reaction.objects.filter(object_id=comment.id).select_related('user')
+
+    def perform_create(self, serializer):
+        comment_id = self.kwargs['id']
+        comment = generics.get_object_or_404(Comment, pk=comment_id)
+        comment_type = ContentType.objects.get_for_model(Comment)
+        reaction_type = serializer.validated_data['reaction_type']
+        reaction = Reaction.objects.filter(
+            user=self.request.user,
+            content_type=comment_type,
+            object_id=comment.id
+        ).first()
+
+        if reaction and reaction.reaction_type == reaction_type:
+            Comment.objects.filter(
+                pk=comment_id,
+                reaction_count__gt=0
+            ).update(
+                reaction_count=F("reaction_count") - 1
+            )
+            reaction.delete()
+        elif reaction and reaction.reaction_type != reaction_type:
+            reaction.reaction_type = reaction_type
+            reaction.save(update_fields=["reaction_type"])
+        else:
+            serializer.save(
+                user=self.request.user,
+                content_type=comment_type,
+                object_id=comment.id
+            )
+            Comment.objects.filter(pk=comment_id).update(
+                reaction_count=F("reaction_count") + 1
+            )
+
 class CategoryListCreateView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'slug']
     permission_classes = [permissions.IsAuthenticated]
+
+
+class BookmarkCreateView(generics.CreateAPIView):
+    queryset = Bookmark.objects.all()
+    serializer_class = BookmarkSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+    def perform_create(self, serializer):
+        post_id = self.kwargs['id']
+        post = generics.get_object_or_404(Post, pk=post_id)
+        if post:
+            if post:
+                serializer.save(user=self.request.user, post=post)
+                Post.objects.filter(
+                    pk=post_id).update(
+                    bookmark_count=F("bookmark_count") + 1
+                )
+
+class BookmarkDeleteView(generics.DestroyAPIView):
+    queryset = Bookmark.objects.all()
+    serializer_class = BookmarkSerializer
+    permission_classes = [permissions.IsAuthenticated, IsBookmarkOwner]
+    lookup_field = 'pk'
+    lookup_url_kwarg = 'id'
+
+    def perform_destroy(self, instance):
+        post_id = self.kwargs['id']
+        post = generics.get_object_or_404(Post, pk=post_id)
+        if post:
+            Post.objects.filter(
+                pk=post_id,
+                bookmark_count__gt=0
+            ).update(
+                bookmark_count=F("bookmark_count") - 1
+            )
+            instance.delete()
+
+class ListUserBookmarksView(generics.ListAPIView):
+    serializer_class = BookmarkSerializer
+    permission_classes = [permissions.IsAuthenticated, IsBookmarkOwner]
+
+    def  get_queryset(self):
+        return Bookmark.objects.filter(user=self.request.user).select_related('post').select_related('user')

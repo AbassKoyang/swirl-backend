@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 # Create your models here.
 
 User = settings.AUTH_USER_MODEL
@@ -63,6 +65,7 @@ class Post(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICE, default=DRAFT)
     comment_count = models.PositiveIntegerField(default=0)
     reaction_count = models.PositiveIntegerField(default=0)
+    bookmark_count = models.PositiveIntegerField(default=0)
     is_deleted = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -93,7 +96,7 @@ class Comment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['created_at']
+        ordering = ['-created_at']
     
     def __str__(self):
         return f"Comment by {self.user} on {self.post}"
@@ -106,14 +109,34 @@ class Reaction(models.Model):
         ('upvote', "Upvote"),
         ('downvote', "Downvote"),
     ]
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='reactions')
-    user = models.Foreignkey(User, on_delete=models.CASCADE, related_name='reactions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reactions')
     reaction_type= models.CharField(max_length=10, default='upvote')
-
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE
+    )
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey(
+        "content_type",
+        "object_id"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['created_at']
+        unique_together=("user", "content_type", "object_id")
+        ordering = ['-created_at']
     
     def __str__(self):
         return f"Reaction by {self.user} on {self.post}"
+
+class Bookmark(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='bookmarks')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmarks')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together=("user", 'post')
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Bookmark on {self.post} by {self.user}"
