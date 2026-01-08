@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Notification
+from .models import Notification, PushNotificationToken
 from apps.core.serializers import UserSummarySerializer
 
 
@@ -19,6 +19,8 @@ class NotificationSerializer(serializers.ModelSerializer):
             'target_object_id',
             'target_content_type',
             'is_read',
+            'email_sent',
+            'push_sent',
             'created_at'
         ]
         read_only_fields = [
@@ -27,11 +29,18 @@ class NotificationSerializer(serializers.ModelSerializer):
             'action_type',
             'target_object_id',
             'target_content_type',
+            'email_sent',
+            'push_sent',
             'created_at'
         ]
 
 
-class MarkNotificationReadSerializer(serializers.Serializer):
-    """Serializer for marking notification as read"""
-    pass
-
+class PushNotificationTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PushNotificationToken
+        fields = ['id', 'token', 'device_type', 'is_active', 'created_at']
+        read_only_fields = ['id', 'is_active', 'created_at']
+    
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)

@@ -66,6 +66,15 @@ MIDDLEWARE = [
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "no-reply@example.com"
 
+# Frontend URL for email notification links
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+
+# Firebase Configuration (for push notifications)
+# Option 1: Path to credentials file
+FIREBASE_CREDENTIALS_PATH = BASE_DIR / 'config' / 'firebase-credentials.json'
+# Option 2: Or use environment variable (for production)
+# FIREBASE_CREDENTIALS_JSON = config('FIREBASE_CREDENTIALS_JSON', default=None)
+
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 

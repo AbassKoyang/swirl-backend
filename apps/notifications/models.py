@@ -43,6 +43,8 @@ class Notification(models.Model):
     object_id = models.PositiveIntegerField(null=True, blank=True)
     target_object = GenericForeignKey('content_type', 'object_id')
     is_read = models.BooleanField(default=False)
+    email_sent = models.BooleanField(default=False)
+    push_sent = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -55,3 +57,39 @@ class Notification(models.Model):
     def __str__(self):
         return f"{self.actor} {self.get_action_type_display()} - {self.user}"
 
+
+class PushNotificationToken(models.Model):
+    """
+    Store FCM (Firebase Cloud Messaging) tokens for push notifications.
+    """
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='push_tokens'
+    )
+    token = models.CharField(
+        max_length=255,
+        unique=True,
+        help_text="FCM device token"
+    )
+    device_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('ios', 'iOS'),
+            ('android', 'Android'),
+            ('web', 'Web'),
+        ],
+        default='web'
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'token')
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.device_type}"
