@@ -44,10 +44,6 @@ class MarkNotificationReadView(APIView):
 
 
 class RegisterPushTokenView(generics.CreateAPIView):
-    """
-    Register a device token for push notifications.
-    POST /api/notifications/push-token/
-    """
     serializer_class = PushNotificationTokenSerializer
     permission_classes = [permissions.IsAuthenticated]
     
@@ -55,7 +51,6 @@ class RegisterPushTokenView(generics.CreateAPIView):
         token = serializer.validated_data['token']
         device_type = serializer.validated_data.get('device_type', 'web')
         
-        # Update or create token
         token_obj, created = PushNotificationToken.objects.update_or_create(
             token=token,
             defaults={
@@ -69,10 +64,6 @@ class RegisterPushTokenView(generics.CreateAPIView):
 
 
 class UnregisterPushTokenView(APIView):
-    """
-    Unregister a device token for push notifications.
-    DELETE /api/notifications/push-token/{token}/
-    """
     permission_classes = [permissions.IsAuthenticated]
     
     def delete(self, request, token, **kwargs):

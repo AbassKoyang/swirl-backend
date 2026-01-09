@@ -1,13 +1,8 @@
-"""
-Firebase configuration for push notifications.
-Initialize Firebase Admin SDK here.
-"""
 import firebase_admin
 from firebase_admin import credentials
 from django.conf import settings
 import os
 
-# Initialize Firebase Admin SDK (only once)
 _firebase_app = None
 
 def initialize_firebase():
@@ -19,7 +14,6 @@ def initialize_firebase():
     
     if _firebase_app is None:
         try:
-            # Option 1: Use service account JSON file
             if hasattr(settings, 'FIREBASE_CREDENTIALS_PATH'):
                 cred_path = settings.FIREBASE_CREDENTIALS_PATH
                 if os.path.exists(cred_path):
@@ -28,7 +22,6 @@ def initialize_firebase():
                 else:
                     print(f"Warning: Firebase credentials file not found at {cred_path}")
             
-            # Option 2: Use environment variables (for production)
             elif hasattr(settings, 'FIREBASE_CREDENTIALS_JSON'):
                 import json
                 cred_info = json.loads(settings.FIREBASE_CREDENTIALS_JSON)

@@ -45,6 +45,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     instagram = models.URLField(blank=True, null=True)
     twitter = models.URLField(blank=True, null=True)
     github = models.URLField(blank=True, null=True)
+    followers_count = models.PositiveIntegerField(default=0)
+    following_count = models.PositiveIntegerField(default=0)
+    posts_count = models.PositiveIntegerField(default=0)
+    reactions_count = models.PositiveIntegerField(default=0)
+    bookmarks_count = models.PositiveIntegerField(default=0)
 
     is_staff =  models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False, help_text="Indicates whether the user has all admin permissions. Defaults to False.")
