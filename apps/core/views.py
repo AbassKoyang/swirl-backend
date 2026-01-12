@@ -182,7 +182,7 @@ def google_login(request):
             httponly=True,
             secure=False,
             samesite="Lax",
-            max_age=60 * 60 * 24,
+            max_age=60 * 30,
             path='/'
         )
 
@@ -192,7 +192,7 @@ def google_login(request):
             httponly=True,
             secure=False,
             samesite="Lax",
-            max_age=60 * 60 * 24,
+            max_age=(60 * 60 * 24) * 7,
             path='/'
         )
 
@@ -270,7 +270,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 httponly=True,
                 secure=False, 
                 samesite="Lax",
-                max_age=60 * 60 * 24,
+                max_age=60 * 30,
                 path='/'
             )
 
@@ -280,7 +280,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 httponly=True,
                 secure=False,
                 samesite="Lax",
-                max_age=60 * 60 * 24,
+                max_age=(60 * 60 * 24) * 7,
                 path='/'
             )
             response.data = {
@@ -330,8 +330,20 @@ class CookieTokenRefreshView(TokenRefreshView):
                 key="access_token",
                 value=response.data["access"],
                 httponly=True,
+                secure=False, 
+                samesite="Lax",
+                max_age=60 * 30,
+                path='/'
+            )
+
+            response.set_cookie(
+                key="refresh_token",
+                value=response.data["refresh"],
+                httponly=True,
                 secure=False,
-                samesite="None",
+                samesite="Lax",
+                max_age=(60 * 60 * 24) * 7,
+                path='/'
             )
             response.data = {
                 "status": True,
