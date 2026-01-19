@@ -1,6 +1,6 @@
 
 from django.db.models import F
-from rest_framework import generics, filters, permissions
+from rest_framework import generics, filters, permissions, pagination
 from rest_framework.response import Response
 from django.contrib.contenttypes.models import ContentType
 
@@ -11,9 +11,9 @@ from .throttles import (
 )
 from apps.notifications.utils import create_notification
 
-from .serializers import CommentSerializer, PostSerializer, CategorySerializer, ReactionSerializer, BookmarkSerializer
+from .serializers import CommentSerializer, PostSerializer, CategorySerializer, ReactionSerializer, BookmarkSerializer, TagSerializer
 
-from .models import Post, Category, Comment, Reaction, Bookmark
+from .models import Post, Category, Comment, Reaction, Bookmark, Tag
 from apps.core.models import User
 # Create your views here
 
@@ -46,11 +46,16 @@ class PostsListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         print(serializer.validated_data)
-        title : str = serializer.validated_data.get('title')
-        content = serializer.validated_data.get('content') or None
-        if content is None:
-            content = title
-        serializer.save(author=self.request.user, content=content)
+        validated_data = serializer.validated_data
+        tag_names = validated_data.pop("tags", [])
+        tags = []
+        for name in tag_names:
+            tag, _ = Tag.objects.get_or_create(
+                name=name.lower().strip(),
+                defaults={"slug": name.lower().replace(" ", "-")}
+            )
+            tags.append(tag)
+        serializer.save(author=self.request.user, tags=tags)
 
 class PostsUpdateView(generics.UpdateAPIView):
     queryset= Post.objects.all()
@@ -63,9 +68,7 @@ class PostsUpdateView(generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         instance = serializer.save();
-        if not instance.content:
-            instance.content = instance.title
-            instance.save()
+        instance.save()
 
 class PostDeleteView(generics.DestroyAPIView):
     queryset= Post.objects.all()
@@ -321,12 +324,21 @@ class CategoryListCreateView(generics.ListCreateAPIView):
     serializer_class = CategorySerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'slug']
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
+    pagination_class = None
+
+class TagListCreateView(generics.ListCreateAPIView):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'slug']
+    permission_classes = [permissions.AllowAny]
+    pagination_class = None
 
 
 class BookmarkCreateView(generics.CreateAPIView):
     queryset = Bookmark.objects.all()
-    serializer_class = BookmarkSerializer
+    serializer_class = TagSerializer
     permission_classes = [permissions.IsAuthenticated]
     throttle_classes = [BookmarkRateThrottle]
 

@@ -16,4 +16,5 @@ urlpatterns = [
     path('comments/<int:id>/replies/', views.RepliesListCreateView.as_view(), name='reply-comment'),
     path('comments/<int:id>/reactions/', views.CommentReactionListCreateView.as_view(), name='list-create-comment-reactions'),
     path('categories/', views.CategoryListCreateView.as_view(), name='list-create-category'),
+    path('tags/', views.TagListCreateView.as_view(), name='list-create-tag'),
 ]

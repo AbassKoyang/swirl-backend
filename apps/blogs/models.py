@@ -60,6 +60,7 @@ class Post(models.Model):
     tags = models.ManyToManyField(Tag, related_name='posts', blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='posts')
     title = models.CharField(max_length=225)
+    subtitle = models.CharField(max_length=500, blank=True)
     slug = models.SlugField(unique=True)
     content = models.TextField(blank=True)
     thumbnail = models.URLField(blank=True, null=True)
@@ -68,6 +69,9 @@ class Post(models.Model):
     reaction_count = models.PositiveIntegerField(default=0)
     bookmark_count = models.PositiveIntegerField(default=0)
     views_count = models.PositiveIntegerField(default=0)
+    word_count = models.PositiveIntegerField(default=0)
+    paragraph_count = models.PositiveIntegerField(default=0)
+    read_time = models.PositiveIntegerField(default=0)
     is_deleted = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)

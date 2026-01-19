@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.core.serializers import UserSummarySerializer
-from .models import Category, Comment, Post, Reaction, Bookmark
+from .models import Category, Comment, Post, Reaction, Bookmark, Tag
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,9 +10,25 @@ class CategorySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return super().create(validated_data)
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['id', 'name', 'slug', 'created_at', ]
+    def create(self, validated_data):
+        return super().create(validated_data)
+
 class PostSerializer(serializers.ModelSerializer):
     author = UserSummarySerializer(read_only=True)
     category = CategorySerializer(read_only=True)
+    tags = serializers.ListField(
+            child=serializers.CharField(),
+            write_only=True
+        )
+    tag_objects = TagSerializer(
+        source="tags",
+        many=True,
+        read_only=True
+    )    
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
         source='category',
