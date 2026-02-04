@@ -83,6 +83,14 @@ class RegisterUser(generics.CreateAPIView):
         except Exception:
             pass 
 
+class ListUsersView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ReadOnlyRateThrottle]
+
+    def get_queryset(self):
+        return User.objects.all()
+
 class UpdateUser(generics.UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
