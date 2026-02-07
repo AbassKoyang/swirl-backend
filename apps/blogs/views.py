@@ -79,6 +79,7 @@ class PostDeleteView(generics.DestroyAPIView):
 
     def perform_destroy(self, serializer):
         instance = serializer.save();
+        print(instance)
         instance.is_deleted = True
         instance.save()
 
@@ -349,7 +350,7 @@ class TagListCreateView(generics.ListCreateAPIView):
 
 class BookmarkCreateView(generics.CreateAPIView):
     queryset = Bookmark.objects.all()
-    serializer_class = TagSerializer
+    serializer_class = BookmarkSerializer
     permission_classes = [permissions.IsAuthenticated]
     throttle_classes = [BookmarkRateThrottle]
 
@@ -358,7 +359,7 @@ class BookmarkCreateView(generics.CreateAPIView):
         post_id = self.kwargs['id']
         post = generics.get_object_or_404(Post, pk=post_id)
         if post:
-            bookmark = serializer.save(user=self.request.user, post=post)
+            serializer.save(user=self.request.user, post=post)
             Post.objects.filter(
                 pk=post_id).update(
                 bookmark_count=F("bookmark_count") + 1
@@ -382,13 +383,16 @@ class BookmarkDeleteView(generics.DestroyAPIView):
         post_id = self.kwargs['id']
         post = generics.get_object_or_404(Post, pk=post_id)
         if post:
+            Bookmark.objects.filter(
+                post=post_id,
+                user=self.request.user
+            ).delete()
             Post.objects.filter(
                 pk=post_id,
                 bookmark_count__gt=0
             ).update(
                 bookmark_count=F("bookmark_count") - 1
             )
-            instance.delete()
 
 class ListUserBookmarksView(generics.ListAPIView):
     serializer_class = BookmarkSerializer
