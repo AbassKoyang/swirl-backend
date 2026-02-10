@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from apps.blogs.views import ListUserBookmarksView, ListUserPostsView
+from apps.blogs.views import ListUserBookmarksView, ListUserPostsView, ListUserCommentsView
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
@@ -23,6 +23,7 @@ urlpatterns = [
     path('users/<int:id>/update/', views.UpdateUser.as_view(), name='update-user'),
     path('users/<int:id>/delete/', views.DeleteUser.as_view(), name='delete-user'),
     path('users/<int:id>/bookmarks/', ListUserBookmarksView.as_view(), name='user-bookmarks'),
+    path('users/<int:id>/comments/', ListUserCommentsView.as_view(), name='user-comments'),
     path('users/<int:id>/posts/', ListUserPostsView.as_view(), name='user-posts'),
     path('users/<int:id>/follow/', views.FollowUserView.as_view(), name='follow-user'),
     path('users/<int:id>/followers/', views.ListFollowersView.as_view(), name='list-followers'),

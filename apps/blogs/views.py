@@ -400,6 +400,14 @@ class ListUserBookmarksView(generics.ListAPIView):
         userId = self.kwargs['id']
         user = generics.get_object_or_404(User, pk=userId)
         return Bookmark.objects.filter(user=user).select_related('post').select_related('user')
+
+class ListUserCommentsView(generics.ListAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated, IsCommentOwner]
+    def  get_queryset(self):
+        userId = self.kwargs['id']
+        user = generics.get_object_or_404(User, pk=userId)
+        return Comment.objects.filter(user=user).select_related('post').select_related('user')
         
 class ListUserPostsView(generics.ListAPIView):
     serializer_class = PostSerializer
