@@ -7,14 +7,14 @@ from .models import Category, Comment, Post, Reaction, Bookmark, Tag
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'created_at', ]
+        fields = ['id', 'name', 'slug', 'created_at', 'posts_count']
     def create(self, validated_data):
         return super().create(validated_data)
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ['id', 'name', 'slug', 'created_at', ]
+        fields = ['id', 'name', 'slug', 'created_at']
     def create(self, validated_data):
         return super().create(validated_data)
 

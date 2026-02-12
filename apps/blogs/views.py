@@ -56,6 +56,8 @@ class PostsListCreateView(generics.ListCreateAPIView):
             )
             tags.append(tag)
         serializer.save(author=self.request.user, tags=tags)
+        category = generics.get_object_or_404(Category, pk=validated_data.category_id)
+        category.update(posts_count=F("posts_count") + 1)
 
 class PostsUpdateView(generics.UpdateAPIView):
     queryset= Post.objects.all()
@@ -338,6 +340,13 @@ class CategoryListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.AllowAny]
     pagination_class = None
 
+class RetrieveCategoryView(generics.RetrieveAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [permissions.AllowAny]
+    lookup_field = 'slug'
+    lookup_url_kwarg = 'slug'
+
 class TagListCreateView(generics.ListCreateAPIView):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -417,3 +426,13 @@ class ListUserPostsView(generics.ListAPIView):
         userId = self.kwargs['id']
         user = generics.get_object_or_404(User, pk=userId)
         return Post.objects.filter(author=user).select_related('author')
+
+class ListCategoryPostsView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        category_slug = self.kwargs['slug']
+        category = generics.get_object_or_404(Category, slug=category_slug)
+
+        return Post.objects.filter(category=category).select_related('author')

@@ -10,11 +10,13 @@ urlpatterns = [
     path('posts/<int:id>/reactions/', views.PostReactionListCreateView.as_view(), name='list-create-post-reactions'),
     path('posts/<int:id>/bookmark/', views.BookmarkCreateView.as_view(), name='create-post-bookmark'),
     path('posts/<int:id>/bookmark/delete/', views.BookmarkDeleteView.as_view(), name='delete-bookmark'),
+    path('posts/categories/<slug:slug>/', views.ListCategoryPostsView.as_view(), name='list-category-posts'),
     path('comments/<int:id>/', views.RetrieveCommentView.as_view(), name='retrieve-comment'),
     path('comments/<int:id>/delete/', views.DeleteCommentView.as_view(), name='delete-comment'),
     path('comments/<int:id>/update/', views.UpdateCommentView.as_view(), name='update-comment'),
     path('comments/<int:id>/replies/', views.RepliesListCreateView.as_view(), name='reply-comment'),
     path('comments/<int:id>/reactions/', views.CommentReactionListCreateView.as_view(), name='list-create-comment-reactions'),
     path('categories/', views.CategoryListCreateView.as_view(), name='list-create-category'),
+    path('categories/<slug:slug>/', views.RetrieveCategoryView.as_view(), name='retrieve-category'),
     path('tags/', views.TagListCreateView.as_view(), name='list-create-tag'),
 ]
