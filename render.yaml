@@ -1,7 +1,7 @@
 databases:
   - name: swirl_backenddb
     plan: free
-    databaseName: swirl-backend
+    databaseName: swirl_backend
     user: swirl_backend
 
 services:
