@@ -1,7 +1,7 @@
 import requests
 
 
-endpoint = "http://localhost:8000/api/categories/"
+endpoint = "https://swirl-backend-n3t8.onrender.com/api/categories/"
 
 name = input("Name: ")
 slug = input("Slug: ")
